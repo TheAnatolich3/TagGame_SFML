@@ -6,6 +6,8 @@ int main()
 {
 	RenderWindow window(VideoMode(256, 256), "TagGame");
 
+	// Задаем максимальную частоту кадров (иначе эффект анимации может быть незаметен)
+	window.setFramerateLimit(60);
 	// Создание и загрузка текстуры
 	Texture texture;
 	texture.loadFromFile("Images/15.png");
@@ -45,6 +47,60 @@ int main()
 				window.close();
 			}
 
+			if (event.type == Event::MouseButtonPressed)
+			{
+				// Если это была ЛКМ, то пробуем выполнить перестановку "пятнашек"
+				if (event.key.code == Mouse::Left)
+				{
+					// Получаем координаты того места, где был произведен щелчок
+					Vector2i position = Mouse::getPosition(window);
+
+					// Переводим эти координаты в координаты наших блоков
+					int x = position.x / blockWidht + 1;
+					int y = position.y / blockWidht + 1;
+
+					// Переменные для задания смещения...
+					int dx = 0; // ...горизонтального...
+					int dy = 0; // ...и вертикального.
+
+					// Если справа пустое место
+					if (grid[x + 1][y] == 16) { dx = 1; dy = 0; };
+
+					// Если снизу пустое место
+					if (grid[x][y + 1] == 16) { dx = 0; dy = 1; };
+
+					// Если сверху пустое место
+					if (grid[x][y - 1] == 16) { dx = 0; dy = -1; };
+
+					// Если слева пустое место
+					if (grid[x - 1][y] == 16) { dx = -1; dy = 0; };
+
+					// то меняем местами пустую клетку с выбранным блоком
+					int temp = grid[x][y];
+					grid[x][y] = 16;
+					grid[x + dx][y + dy] = temp;
+
+					// Ставим пустой блок на место выбранного пользователем блока
+					sprite[16].move(-dx * blockWidht, -dy * blockWidht);
+
+					// Скорость анимации
+					float speed = 6;
+					for (int i = 0; i < blockWidht; i += speed)
+					{
+						// Двигаем выбранный блок
+						sprite[temp].move(speed * dx, speed * dy);
+
+						// Отрисовываем пустой блок
+						window.draw(sprite[16]);
+
+						// Отрисовываем выбранный блок
+						window.draw(sprite[temp]);
+
+						// Отображаем всю композицию в окне
+						window.display();
+					}
+				}
+			}
 		}
 		// Устанавливаем цвет фона - белый
 		window.clear(Color::White);
@@ -57,7 +113,7 @@ int main()
 				// Считываем значение ячейки игрового поля…
 				int n = grid[i + 1][j + 1];
 				// …и устанавливаем на нее соответствующий спрайт
-				sprite[n].setPosition(i * blockWidht, j * blockWidht);
+				sprite[n].setPosition(static_cast<float>(i * blockWidht), static_cast<float>(j * blockWidht));
 				// Отрисовка спрайта
 				window.draw(sprite[n]);
 			}
